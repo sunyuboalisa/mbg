@@ -20,7 +20,7 @@ public class ${modelName}ServiceImpl implements ${modelName}Service {
     }
 
     @Override
-    public ${modelName} getById(int id) {
+    public ${modelName} getById(${pkType} id) {
         return ${modelNameLower}Mapper.selectByPrimaryKey(id);
     }
 
@@ -35,7 +35,21 @@ public class ${modelName}ServiceImpl implements ${modelName}Service {
     }
 
     @Override
-    public void delete(int id) {
+    public void delete(${pkType} id) {
         ${modelNameLower}Mapper.deleteByPrimaryKey(id);
+    }
+    @Override
+    public void upsert(${modelName} model) {
+        ${modelNameLower}Mapper.upsert(model);
+    }
+
+    @Override
+    public void batchUpsert(List<${modelName}> list) {
+        ${modelNameLower}Mapper.batchUpsert(list);
+    }
+
+    @Override
+    public void batchDelete(List<${pkType}> ids) {
+        ${modelNameLower}Mapper.batchDelete(ids);
     }
 }

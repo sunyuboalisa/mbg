@@ -8,6 +8,7 @@ import org.mybatis.generator.api.PluginAdapter;
 import org.mybatis.generator.api.dom.DefaultJavaFormatter;
 import org.mybatis.generator.api.dom.java.Field;
 import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.java.InnerClass;
 import org.mybatis.generator.api.dom.java.Interface;
 import org.mybatis.generator.api.dom.java.JavaVisibility;
 import org.mybatis.generator.api.dom.java.Method;
@@ -85,9 +86,15 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         String modelName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
-        generateControllerCode(modelName, targetControllerPackage);
-        generateServiceCode(modelName, targetServicePackage);
-        generateServiceImplCode(modelName, targetServiceImplPackage);
+        String pkType = "String";
+        if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
+            pkType = introspectedTable.getPrimaryKeyColumns().get(0)
+                    .getFullyQualifiedJavaType().getShortName();
+        }
+
+        generateControllerCode(modelName, targetControllerPackage, pkType);
+        generateServiceCode(modelName, targetServicePackage, pkType);
+        generateServiceImplCode(modelName, targetServiceImplPackage, pkType);
         return true;
     }
 
@@ -102,6 +109,9 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         }
         for (Method iterable_element : modelClass.getMethods()) {
             exampleClass.addMethod(iterable_element);
+        }
+        for (InnerClass innerClass : modelClass.getInnerClasses()) {
+            exampleClass.addInnerClass(innerClass);
         }
 
         try {
@@ -121,7 +131,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         }
     }
 
-    private void generateControllerCode(String modelName, String targetControllerPackage) {
+    private void generateControllerCode(String modelName, String targetControllerPackage, String pkType) {
         VelocityContext velocityContext = new VelocityContext();
 
         velocityContext.put("modelName", modelName);
@@ -129,6 +139,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         velocityContext.put("modelPackageName", modelPackage);
         velocityContext.put("controllerPackageName", targetControllerPackage);
         velocityContext.put("servicePackageName", targetServicePackage);
+        velocityContext.put("pkType", pkType);
 
         try {
             String filtPath = targetProject + "/" + targetControllerPackage.replace('.', '/') + "/" + modelName
@@ -146,13 +157,14 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         }
     }
 
-    private void generateServiceCode(String modelName, String packageName) {
+    private void generateServiceCode(String modelName, String packageName, String pkType) {
         VelocityContext velocityContext = new VelocityContext();
 
         velocityContext.put("modelName", modelName);
         velocityContext.put("modelNameLower", modelName.toLowerCase());
         velocityContext.put("modelPackageName", modelPackage);
         velocityContext.put("servicePackageName", targetServicePackage);
+        velocityContext.put("pkType", pkType);
 
         try {
             String filtPath = targetProject + "/" + targetServicePackage.replace('.', '/') + "/" + modelName
@@ -170,7 +182,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         }
     }
 
-    private void generateServiceImplCode(String modelName, String packageName) {
+    private void generateServiceImplCode(String modelName, String packageName, String pkType) {
         VelocityContext velocityContext = new VelocityContext();
 
         velocityContext.put("modelName", modelName);
@@ -179,6 +191,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         velocityContext.put("mapperPackageName", mapperPackage);
         velocityContext.put("servicePackageName", targetServicePackage);
         velocityContext.put("serviceImplPackageName", targetServiceImplPackage);
+        velocityContext.put("pkType", pkType);
 
         try {
             String filtPath = targetProject + "/" + targetServiceImplPackage.replace('.', '/') + "/" + modelName

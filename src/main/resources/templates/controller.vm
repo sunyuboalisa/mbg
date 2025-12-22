@@ -14,18 +14,28 @@ public class ${modelName}Controller {
     @Autowired
     private ${modelName}Service ${modelNameLower}Service;
 
-    @GetMapping
+    @GetMapping("/getAll")
     public List<${modelName}> getAll() {
         return ${modelNameLower}Service.getAll();
     }
 
     @GetMapping("/{id}")
-    public ${modelName} getById(@PathVariable int id) {
+    public ${modelName} getById(@PathVariable ${pkType} id) {
         return ${modelNameLower}Service.getById(id);
     }
 
-    @PostMapping
-    public void create(@RequestBody ${modelName} ${modelNameLower}) {
-        ${modelNameLower}Service.create(${modelNameLower});
+    @PostMapping("/upsert")
+    public void upsert(@RequestBody ${modelName} ${modelNameLower}) {
+        ${modelNameLower}Service.upsert(${modelNameLower});
+    }
+
+    @PostMapping("/batch-upsert")
+    public void batchUpsert(@RequestBody List<${modelName}> list) {
+        ${modelNameLower}Service.batchUpsert(list);
+    }
+
+    @DeleteMapping("/batch-delete")
+    public void batchDelete(@RequestBody List<${pkType}> ids) {
+        ${modelNameLower}Service.batchDelete(ids);
     }
 }
