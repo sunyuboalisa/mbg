@@ -1,0 +1,12 @@
+package ${servicePackageName};
+
+import ${modelPackageName}.${modelName};
+import java.util.List;
+
+public interface ${modelName}Service {
+    List<${modelName}> getAll();
+    ${modelName} getById(int id);
+    void create(${modelName} model);
+    void update(${modelName} model);
+    void delete(int id);
+}

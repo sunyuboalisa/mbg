@@ -1,0 +1,31 @@
+package ${controllerPackageName};
+
+import ${modelPackageName}.${modelName};
+import ${servicePackageName}.${modelName}Service;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.web.bind.annotation.*;
+
+import java.util.List;
+
+@RestController
+@RequestMapping("/${modelNameLower}")
+public class ${modelName}Controller {
+
+    @Autowired
+    private ${modelName}Service ${modelNameLower}Service;
+
+    @GetMapping
+    public List<${modelName}> getAll() {
+        return ${modelNameLower}Service.getAll();
+    }
+
+    @GetMapping("/{id}")
+    public ${modelName} getById(@PathVariable int id) {
+        return ${modelNameLower}Service.getById(id);
+    }
+
+    @PostMapping
+    public void create(@RequestBody ${modelName} ${modelNameLower}) {
+        ${modelNameLower}Service.create(${modelNameLower});
+    }
+}

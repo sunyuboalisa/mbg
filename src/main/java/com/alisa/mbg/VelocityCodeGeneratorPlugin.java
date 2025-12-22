@@ -1,0 +1,198 @@
+package com.alisa.mbg;
+
+import org.apache.velocity.VelocityContext;
+import org.apache.velocity.app.VelocityEngine;
+import org.mybatis.generator.api.IntrospectedTable;
+import org.mybatis.generator.api.JavaFormatter;
+import org.mybatis.generator.api.PluginAdapter;
+import org.mybatis.generator.api.dom.DefaultJavaFormatter;
+import org.mybatis.generator.api.dom.java.Field;
+import org.mybatis.generator.api.dom.java.FullyQualifiedJavaType;
+import org.mybatis.generator.api.dom.java.Interface;
+import org.mybatis.generator.api.dom.java.JavaVisibility;
+import org.mybatis.generator.api.dom.java.Method;
+import org.mybatis.generator.api.dom.java.TopLevelClass;
+import java.io.File;
+import java.io.FileWriter;
+import java.io.IOException;
+import java.util.List;
+import java.util.Properties;
+
+/*
+ * 该插件可以配置生成entity、dto、mapper、service、controller等类
+ * 且定义这些类的名字和生成的包名和位置
+ */
+public class VelocityCodeGeneratorPlugin extends PluginAdapter {
+    private VelocityEngine velocityEngine;
+    private String templatePath;
+    private String dtoPackage;
+    private String modelPackage;
+    private String mapperPackage;
+    private String targetControllerPackage;
+    private String targetServicePackage;
+    private String targetServiceImplPackage;
+    private String targetProject;
+
+    @Override
+    public void setProperties(Properties properties) {
+        super.setProperties(properties);
+        dtoPackage = properties.getProperty("dtoPackage", "com.example.demo.dto");
+        super.setProperties(properties);
+        templatePath = properties.getProperty("templatePath", "src/main/resources/templates");
+        targetControllerPackage = properties.getProperty("targetControllerPackage",
+                "com.example.demo.controller");
+        targetServicePackage = properties.getProperty("targetServicePackage", "com.example.demo.service");
+        targetServiceImplPackage = properties.getProperty("targetServiceImplPackage", "com.example.demo.serviceImpl");
+        modelPackage = properties.getProperty("modelPackage", "com.example.demo.model");
+        mapperPackage = properties.getProperty("mapperPackage", "com.example.demo.mapper");
+        targetProject = properties.getProperty("targetProject", "src/main/java");
+        properties.setProperty("file.resource.loader.path", "target/classes"); // Path to templates
+        velocityEngine = new VelocityEngine(properties);
+    }
+
+    @Override
+    public boolean validate(List<String> warnings) {
+        return true;
+    }
+
+    @Override
+    public void initialized(IntrospectedTable introspectedTable) {
+        // 获取默认的 Example 类名称
+        String oldExampleName = introspectedTable.getExampleType();
+
+        // 自定义新的命名规则，将 Example 替换为 Query
+        String newQueryName = oldExampleName.replace("Example", "Filter");
+
+        // 设置新的名称
+        introspectedTable.setExampleType(newQueryName);
+    }
+
+    @Override
+    public boolean clientGenerated(Interface interfaze, IntrospectedTable introspectedTable) {
+        // 添加 @Mapper 注解
+        FullyQualifiedJavaType mapperAnnotation = new FullyQualifiedJavaType("org.apache.ibatis.annotations.Mapper");
+        interfaze.addImportedType(mapperAnnotation);
+        interfaze.addAnnotation("@Mapper");
+        return true;
+    }
+
+    @Override
+    public boolean modelExampleClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        generateCustomExample(topLevelClass, introspectedTable);
+        return false;
+    }
+
+    @Override
+    public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
+        String modelName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
+        generateControllerCode(modelName, targetControllerPackage);
+        generateServiceCode(modelName, targetServicePackage);
+        generateServiceImplCode(modelName, targetServiceImplPackage);
+        return true;
+    }
+
+    private void generateCustomExample(TopLevelClass modelClass, IntrospectedTable introspectedTable) {
+        String exampleClassName = modelClass.getType().getShortName();
+        TopLevelClass exampleClass = new TopLevelClass(dtoPackage + "." + exampleClassName);
+        exampleClass.setVisibility(JavaVisibility.PUBLIC);
+        exampleClass.setFinal(true);
+
+        for (Field iterable_element : modelClass.getFields()) {
+            exampleClass.addField(iterable_element);
+        }
+        for (Method iterable_element : modelClass.getMethods()) {
+            exampleClass.addMethod(iterable_element);
+        }
+
+        try {
+            String filtPath = targetProject + "/" + dtoPackage.replace('.', '/') + "/" +
+                    exampleClassName + ".java";
+            File exampleFile = new File(filtPath);
+            if (!exampleFile.getParentFile().exists()) {
+                exampleFile.getParentFile().mkdirs();
+            }
+            try (FileWriter writer = new FileWriter(exampleFile)) {
+                JavaFormatter formatter = new DefaultJavaFormatter();
+                String formattedContent = formatter.getFormattedContent(exampleClass);
+                writer.write(formattedContent);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generateControllerCode(String modelName, String targetControllerPackage) {
+        VelocityContext velocityContext = new VelocityContext();
+
+        velocityContext.put("modelName", modelName);
+        velocityContext.put("modelNameLower", modelName.toLowerCase());
+        velocityContext.put("modelPackageName", modelPackage);
+        velocityContext.put("controllerPackageName", targetControllerPackage);
+        velocityContext.put("servicePackageName", targetServicePackage);
+
+        try {
+            String filtPath = targetProject + "/" + targetControllerPackage.replace('.', '/') + "/" + modelName
+                    + "Controller.java";
+            File exampleFile = new File(filtPath);
+            if (!exampleFile.getParentFile().exists()) {
+                exampleFile.getParentFile().mkdirs();
+            }
+            try (FileWriter writer = new FileWriter(exampleFile)) {
+                velocityEngine.mergeTemplate(templatePath + "/controller.vm", "UTF-8", velocityContext, writer);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generateServiceCode(String modelName, String packageName) {
+        VelocityContext velocityContext = new VelocityContext();
+
+        velocityContext.put("modelName", modelName);
+        velocityContext.put("modelNameLower", modelName.toLowerCase());
+        velocityContext.put("modelPackageName", modelPackage);
+        velocityContext.put("servicePackageName", targetServicePackage);
+
+        try {
+            String filtPath = targetProject + "/" + targetServicePackage.replace('.', '/') + "/" + modelName
+                    + "Service.java";
+            File exampleFile = new File(filtPath);
+            if (!exampleFile.getParentFile().exists()) {
+                exampleFile.getParentFile().mkdirs();
+            }
+            try (FileWriter writer = new FileWriter(exampleFile)) {
+                velocityEngine.mergeTemplate(templatePath + "/service.vm", "UTF-8", velocityContext, writer);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generateServiceImplCode(String modelName, String packageName) {
+        VelocityContext velocityContext = new VelocityContext();
+
+        velocityContext.put("modelName", modelName);
+        velocityContext.put("modelNameLower", modelName.toLowerCase());
+        velocityContext.put("modelPackageName", modelPackage);
+        velocityContext.put("mapperPackageName", mapperPackage);
+        velocityContext.put("servicePackageName", targetServicePackage);
+        velocityContext.put("serviceImplPackageName", targetServiceImplPackage);
+
+        try {
+            String filtPath = targetProject + "/" + targetServiceImplPackage.replace('.', '/') + "/" + modelName
+                    + "ServiceImpl.java";
+            File exampleFile = new File(filtPath);
+            if (!exampleFile.getParentFile().exists()) {
+                exampleFile.getParentFile().mkdirs();
+            }
+            try (FileWriter writer = new FileWriter(exampleFile)) {
+                velocityEngine.mergeTemplate(templatePath + "/serviceImpl.vm", "UTF-8", velocityContext, writer);
+
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+}
