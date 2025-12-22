@@ -1,8 +1,8 @@
-package ${seriviceImplPackageName};
+package ${serviceImplPackageName};
 
 import ${mapperPackageName}.${modelName}Mapper;
 import ${modelPackageName}.${modelName};
-import ${serivicePackageName}.${modelName}Service;
+import ${servicePackageName}.${modelName}Service;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 

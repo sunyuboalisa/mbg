@@ -58,14 +58,12 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
 
     @Override
     public void initialized(IntrospectedTable introspectedTable) {
-        // 获取默认的 Example 类名称
-        String oldExampleName = introspectedTable.getExampleType();
+        String oldExampleType = introspectedTable.getExampleType();
+        String className = oldExampleType.substring(oldExampleType.lastIndexOf(".") + 1);
+        String newClassName = className.replace("Example", "Filter");
+        String newFullType = dtoPackage + "." + newClassName;
 
-        // 自定义新的命名规则，将 Example 替换为 Query
-        String newQueryName = oldExampleName.replace("Example", "Filter");
-
-        // 设置新的名称
-        introspectedTable.setExampleType(newQueryName);
+        introspectedTable.setExampleType(newFullType);
     }
 
     @Override
@@ -103,6 +101,8 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         TopLevelClass exampleClass = new TopLevelClass(dtoPackage + "." + exampleClassName);
         exampleClass.setVisibility(JavaVisibility.PUBLIC);
         exampleClass.setFinal(true);
+        exampleClass.addImportedType(new FullyQualifiedJavaType("java.util.List"));
+        exampleClass.addImportedType(new FullyQualifiedJavaType("java.util.ArrayList"));
 
         for (Field iterable_element : modelClass.getFields()) {
             exampleClass.addField(iterable_element);
