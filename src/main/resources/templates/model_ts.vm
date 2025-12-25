@@ -1,0 +1,14 @@
+export interface ${modelName} {
+#foreach($field in $fields)
+  /**
+   * $!{field.javaDocLines}
+   */
+  ${field.name}: ##
+#if(${field.type.shortName} == "String")string##
+#elseif(${field.type.shortName} == "Integer" || ${field.type.shortName} == "Long")number##
+#elseif(${field.type.shortName} == "Boolean")boolean##
+#elseif(${field.type.shortName} == "Date")Date##
+#else any##
+#end;
+#end
+}

@@ -93,6 +93,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         generateControllerCode(modelName, targetControllerPackage, pkType);
         generateServiceCode(modelName, targetServicePackage, pkType);
         generateServiceImplCode(modelName, targetServiceImplPackage, pkType);
+        generateTsModelCode(modelName, topLevelClass.getFields());
         return true;
     }
 
@@ -203,6 +204,27 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
             try (FileWriter writer = new FileWriter(exampleFile)) {
                 velocityEngine.mergeTemplate(templatePath + "/serviceImpl.vm", "UTF-8", velocityContext, writer);
 
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generateTsModelCode(String modelName, List<Field> fields) {
+        VelocityContext velocityContext = new VelocityContext();
+        velocityContext.put("modelName", modelName);
+        velocityContext.put("fields", fields); // 核心：把 Java 字段列表传给模板
+        try {
+            // 设置 TS 文件输出路径，通常放在前端目录或 resources 下
+            String tsPath = targetProject + "/ts/model/" + modelName
+                    + ".ts";
+            File tsFile = new File(tsPath);
+            if (!tsFile.getParentFile().exists()) {
+                tsFile.getParentFile().mkdirs();
+            }
+            try (FileWriter writer = new FileWriter(tsFile)) {
+                // 使用新的 TS 模板
+                velocityEngine.mergeTemplate(templatePath + "/model_ts.vm", "UTF-8", velocityContext, writer);
             }
         } catch (IOException e) {
             e.printStackTrace();
