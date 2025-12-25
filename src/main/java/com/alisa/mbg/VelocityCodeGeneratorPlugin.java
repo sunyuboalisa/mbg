@@ -33,6 +33,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
     private String targetServicePackage;
     private String targetServiceImplPackage;
     private String targetProject;
+    private java.util.List<String> modelNames = new java.util.ArrayList<>();
 
     @Override
     public void setProperties(Properties properties) {
@@ -84,6 +85,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
     @Override
     public boolean modelBaseRecordClassGenerated(TopLevelClass topLevelClass, IntrospectedTable introspectedTable) {
         String modelName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
+        modelNames.add(modelName);
         String pkType = "String";
         if (!introspectedTable.getPrimaryKeyColumns().isEmpty()) {
             pkType = introspectedTable.getPrimaryKeyColumns().get(0)
@@ -95,6 +97,12 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         generateServiceImplCode(modelName, targetServiceImplPackage, pkType);
         generateTsModelCode(modelName, topLevelClass.getFields());
         return true;
+    }
+
+    @Override
+    public List<org.mybatis.generator.api.GeneratedJavaFile> contextGenerateAdditionalJavaFiles() {
+        generateFlatApiConstants();
+        return super.contextGenerateAdditionalJavaFiles();
     }
 
     private void generateCustomExample(TopLevelClass modelClass, IntrospectedTable introspectedTable) {
@@ -225,6 +233,24 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
             try (FileWriter writer = new FileWriter(tsFile)) {
                 // 使用新的 TS 模板
                 velocityEngine.mergeTemplate(templatePath + "/model_ts.vm", "UTF-8", velocityContext, writer);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generateFlatApiConstants() {
+        VelocityContext velocityContext = new VelocityContext();
+        velocityContext.put("modelNames", modelNames);
+
+        try {
+            String tsPath = targetProject + "/ts/api-constants.ts";
+            File tsFile = new File(tsPath);
+            if (!tsFile.getParentFile().exists()) {
+                tsFile.getParentFile().mkdirs();
+            }
+            try (FileWriter writer = new FileWriter(tsFile)) {
+                velocityEngine.mergeTemplate(templatePath + "/api_flat_ts.vm", "UTF-8", velocityContext, writer);
             }
         } catch (IOException e) {
             e.printStackTrace();

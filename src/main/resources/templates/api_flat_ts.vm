@@ -1,0 +1,17 @@
+export default {
+  /* --- 系统基础接口 --- */
+  API_USER_LOGIN: "/api/v1/user/signin",
+  API_USER_LOGOUT: "/user/logout",
+
+#foreach($model in $modelNames)
+#set($upperModel = $model.toUpperCase())
+#set($lowerModel = $model.substring(0,1).toLowerCase() + $model.substring(1))
+  /* --- ${model} 模块 --- */
+  API_${upperModel}_GET_ALL: "/${lowerModel}/getAll",
+  API_${upperModel}_GET_ID: "/${lowerModel}/{id}",
+  API_${upperModel}_UPSERT: "/${lowerModel}/upsert",
+  API_${upperModel}_BATCH_UPSERT: "/${lowerModel}/batch-upsert",
+  API_${upperModel}_BATCH_DELETE: "/${lowerModel}/batch-delete",
+
+#end
+};
