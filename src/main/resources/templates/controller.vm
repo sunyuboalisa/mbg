@@ -25,17 +25,17 @@ public class ${modelName}Controller {
     }
 
     @PostMapping("/upsert")
-    public void upsert(@RequestBody ${modelName} ${modelNameLower}) {
-        ${modelNameLower}Service.upsert(${modelNameLower});
+    public int upsert(@RequestBody ${modelName} ${modelNameLower}) {
+        return ${modelNameLower}Service.upsert(${modelNameLower});
     }
 
     @PostMapping("/batch-upsert")
-    public void batchUpsert(@RequestBody List<${modelName}> list) {
-        ${modelNameLower}Service.batchUpsert(list);
+    public int batchUpsert(@RequestBody List<${modelName}> list) {
+        return ${modelNameLower}Service.batchUpsert(list);
     }
 
     @DeleteMapping("/batch-delete")
-    public void batchDelete(@RequestBody List<${pkType}> ids) {
-        ${modelNameLower}Service.batchDelete(ids);
+    public int batchDelete(@RequestBody List<${pkType}> ids) {
+        return ${modelNameLower}Service.batchDelete(ids);
     }
 }
