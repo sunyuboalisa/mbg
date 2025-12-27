@@ -6,10 +6,10 @@ import java.util.List;
 public interface ${modelName}Service {
     List<${modelName}> getAll();
     ${modelName} getById(${pkType} id);
-    void create(${modelName} model);
-    void update(${modelName} model);
-    void delete(${pkType} id);
-    void upsert(${modelName} model);
-    void batchUpsert(List<${modelName}> list);
-    void batchDelete(List<${pkType}> ids);
+    int create(${modelName} model);
+    int update(${modelName} model);
+    int delete(${pkType} id);
+    int upsert(${modelName} model);
+    int batchUpsert(List<${modelName}> list);
+    int batchDelete(List<${pkType}> ids);
 }
