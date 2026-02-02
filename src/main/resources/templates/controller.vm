@@ -28,7 +28,6 @@ public class ${modelName}Controller {
     }
 
     @PostMapping("/upsert")
-<<<<<<< HEAD
     public Result<Integer> upsert(@RequestBody ${modelName} ${modelNameLower}) {
         var count = ${modelNameLower}Service.upsert(${modelNameLower});
         return new Result<Integer>(count);
@@ -44,19 +43,5 @@ public class ${modelName}Controller {
     public Result<Integer> batchDelete(@RequestBody List<${pkType}> ids) {
         var count = ${modelNameLower}Service.batchDelete(ids);
         return new Result<>(count);
-=======
-    public int upsert(@RequestBody ${modelName} ${modelNameLower}) {
-        return ${modelNameLower}Service.upsert(${modelNameLower});
-    }
-
-    @PostMapping("/batch-upsert")
-    public int batchUpsert(@RequestBody List<${modelName}> list) {
-        return ${modelNameLower}Service.batchUpsert(list);
-    }
-
-    @DeleteMapping("/batch-delete")
-    public int batchDelete(@RequestBody List<${pkType}> ids) {
-        return ${modelNameLower}Service.batchDelete(ids);
->>>>>>> 05b5a956489efc547b2519e1bec0ec8ff3bf6ded
     }
 }
