@@ -25,31 +25,31 @@ public class ${modelName}ServiceImpl implements ${modelName}Service {
     }
 
     @Override
-    public void create(${modelName} model) {
-        ${modelNameLower}Mapper.insert(model);
+    public int create(${modelName} model) {
+        return ${modelNameLower}Mapper.insert(model);
     }
 
     @Override
-    public void update(${modelName} model) {
-        ${modelNameLower}Mapper.updateByPrimaryKey(model);
+    public int update(${modelName} model) {
+        return ${modelNameLower}Mapper.updateByPrimaryKey(model);
     }
 
     @Override
-    public void delete(${pkType} id) {
-        ${modelNameLower}Mapper.deleteByPrimaryKey(id);
+    public int delete(${pkType} id) {
+        return ${modelNameLower}Mapper.deleteByPrimaryKey(id);
     }
     @Override
-    public void upsert(${modelName} model) {
-        ${modelNameLower}Mapper.upsert(model);
-    }
-
-    @Override
-    public void batchUpsert(List<${modelName}> list) {
-        ${modelNameLower}Mapper.batchUpsert(list);
+    public int upsert(${modelName} model) {
+        return ${modelNameLower}Mapper.upsert(model);
     }
 
     @Override
-    public void batchDelete(List<${pkType}> ids) {
-        ${modelNameLower}Mapper.batchDelete(ids);
+    public int batchUpsert(List<${modelName}> list) {
+        return ${modelNameLower}Mapper.batchUpsert(list);
+    }
+
+    @Override
+    public int batchDelete(List<${pkType}> ids) {
+        return ${modelNameLower}Mapper.batchDelete(ids);
     }
 }
