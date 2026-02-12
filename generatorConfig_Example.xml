@@ -8,6 +8,7 @@
             <property name="dtoPackage" value="com.alisa.dto"/>
             <property name="modelPackage" value="com.alisa.model"/>
             <property name="mapperPackage" value="com.alisa.mapper"/>
+            <property name="enumPackage" value="com.alisa.enums"/>
             <property name="targetControllerPackage" value="com.alisa.controller"/>
             <property name="targetServicePackage" value="com.alisa.service"/>
             <property name="targetServiceImplPackage" value="com.alisa.service.serviceImpl"/>
@@ -42,5 +43,13 @@
         <table tableName="tb_channel_user" domainObjectName="ChannelUser"/>
         <table tableName="tb_document" domainObjectName="Document"/>
         <table tableName="tb_base" domainObjectName="Base"/>
+           <table tableName="tb_invitation_type" domainObjectName="InvitationType">
+            <property name="generateEnum" value="true"/>
+            <property name="constantProperty" value="inviterName"/>
+            <property name="keyProperty" value="inviterCode"/>
+            <property name="inviterName" value="inviter_name"/>
+            <property name="inviterCode" value="inviter_code"/>
+            <property name="inviterDescription" value="inviter_description"/>
+        </table>
     </context>
 </generatorConfiguration>

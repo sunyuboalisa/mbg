@@ -16,6 +16,7 @@ import org.mybatis.generator.api.dom.java.TopLevelClass;
 import java.io.File;
 import java.io.FileWriter;
 import java.io.IOException;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Properties;
 
@@ -29,6 +30,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
     private String dtoPackage;
     private String modelPackage;
     private String mapperPackage;
+    private String enumPackage;
     private String targetControllerPackage;
     private String targetServicePackage;
     private String targetServiceImplPackage;
@@ -47,8 +49,9 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         targetServiceImplPackage = properties.getProperty("targetServiceImplPackage", "com.example.demo.serviceImpl");
         modelPackage = properties.getProperty("modelPackage", "com.example.demo.model");
         mapperPackage = properties.getProperty("mapperPackage", "com.example.demo.mapper");
+        enumPackage = properties.getProperty("enumPackage", "com.example.demo.emums");
         targetProject = properties.getProperty("targetProject", "src/main/java");
-        properties.setProperty("file.resource.loader.path", "target/classes"); // Path to templates
+        properties.setProperty("file.resource.loader.path", "target/classes");
         velocityEngine = new VelocityEngine(properties);
     }
 
@@ -96,6 +99,7 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
         generateServiceCode(modelName, targetServicePackage, pkType);
         generateServiceImplCode(modelName, targetServiceImplPackage, pkType);
         generateTsModelCode(modelName, topLevelClass.getFields());
+        generateUniversalEnum(introspectedTable);
         return true;
     }
 
@@ -251,6 +255,67 @@ public class VelocityCodeGeneratorPlugin extends PluginAdapter {
             }
             try (FileWriter writer = new FileWriter(tsFile)) {
                 velocityEngine.mergeTemplate(templatePath + "/api_flat_ts.vm", "UTF-8", velocityContext, writer);
+            }
+        } catch (IOException e) {
+            e.printStackTrace();
+        }
+    }
+
+    private void generateUniversalEnum(IntrospectedTable introspectedTable) {
+        String domainName = introspectedTable.getFullyQualifiedTable().getDomainObjectName();
+        String tableName = introspectedTable.getFullyQualifiedTable().getIntrospectedTableName();
+        Properties props = introspectedTable.getTableConfiguration().getProperties();
+
+        String constantProperty = props.getProperty("constantProperty");
+        String keyProperty = props.getProperty("keyProperty");
+
+        java.util.LinkedHashMap<String, String> columnMapping = new java.util.LinkedHashMap<>();
+        for (Object key : props.keySet()) {
+            String propName = (String) key;
+            if (!Arrays.asList("generateEnum", "constantProperty", "keyProperty").contains(propName)) {
+                columnMapping.put(propName, props.getProperty(propName));
+            }
+        }
+
+        if (columnMapping.isEmpty())
+            return;
+
+        List<java.util.Map<String, String>> dataList = new java.util.ArrayList<>();
+        String sql = "SELECT " + String.join(", ", columnMapping.values()) + " FROM " + tableName;
+
+        try (java.sql.Connection conn = context.getConnection();
+                java.sql.Statement stmt = conn.createStatement();
+                java.sql.ResultSet rs = stmt.executeQuery(sql)) {
+            while (rs.next()) {
+                java.util.Map<String, String> row = new java.util.HashMap<>();
+                for (java.util.Map.Entry<String, String> entry : columnMapping.entrySet()) {
+                    row.put(entry.getKey(), rs.getString(entry.getValue()));
+                }
+                dataList.add(row);
+            }
+        } catch (java.sql.SQLException e) {
+            e.printStackTrace();
+        }
+
+        VelocityContext velocityContext = new VelocityContext();
+        velocityContext.put("packageName", this.enumPackage);
+        velocityContext.put("className", domainName);
+        velocityContext.put("items", dataList);
+        velocityContext.put("propNames", new java.util.ArrayList<>(columnMapping.keySet()));
+        velocityContext.put("constantProperty", constantProperty);
+        velocityContext.put("keyProperty", keyProperty);
+
+        try {
+            String packagePath = this.enumPackage.replace('.', '/');
+            String enumPath = targetProject + "/" + packagePath + "/" + domainName + ".java";
+
+            File file = new File(enumPath);
+            if (!file.getParentFile().exists())
+                file.getParentFile().mkdirs();
+
+            try (java.io.OutputStreamWriter writer = new java.io.OutputStreamWriter(
+                    new java.io.FileOutputStream(file), java.nio.charset.StandardCharsets.UTF_8)) {
+                velocityEngine.mergeTemplate(templatePath + "/universal_enum.vm", "UTF-8", velocityContext, writer);
             }
         } catch (IOException e) {
             e.printStackTrace();

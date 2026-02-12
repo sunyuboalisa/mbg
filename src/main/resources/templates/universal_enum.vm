@@ -1,0 +1,29 @@
+package ${packageName};
+
+import lombok.AllArgsConstructor;
+import lombok.Getter;
+
+@Getter
+@AllArgsConstructor
+public enum ${className} {
+#foreach($item in $items)
+    ${item.get($constantProperty)}(#foreach($p in $propNames)"${item.get($p)}"#if($foreach.hasNext), #end#end)#if($foreach.hasNext),#else;#end
+#end
+
+#foreach($p in $propNames)
+    private final String ${p};
+#end
+
+    public static ${className} of(String code) {
+        if (code == null) {
+            return null;
+        }
+        for (${className} type : values()) {
+#set($getterName = "get" + ${keyProperty.substring(0,1).toUpperCase()} + ${keyProperty.substring(1)})
+            if (type.${getterName}().equalsIgnoreCase(code)) {
+                return type;
+            }
+        }
+        return null;
+    }
+}

@@ -28,11 +28,11 @@ public class MbgApplication {
 			MyBatisGenerator myBatisGenerator = new MyBatisGenerator(config, callback, warnings);
 			myBatisGenerator.generate(null);
 
-			for (String warning : warnings) {
-				System.out.println(warning);
-			}
+			// for (String warning : warnings) {
+			// System.out.println(warning);
+			// }
 
-			System.out.println("生成完成。");
+			System.out.println("completed!!!");
 		} catch (InvalidConfigurationException e) {
 			System.out.println("Invalid configuration: " + e.getMessage());
 		} catch (Exception e) {
